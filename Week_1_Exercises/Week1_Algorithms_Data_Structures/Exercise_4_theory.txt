@@ -1,0 +1,25 @@
+### Step 1: Understand Array Representation
+
+#### Array Representation in Memory
+Arrays are contiguous blocks of memory where each element is of the same data type and accessed using an index. The memory address of each element is calculated based on the base address and the index. This allows constant-time (O(1)) access to elements by index, making arrays very efficient for indexing operations.
+
+#### Advantages of Arrays
+1. **Fast Access**: Constant-time access to elements by index.
+2. **Memory Efficiency**: Arrays have a lower memory overhead compared to other data structures like linked lists.
+
+### Step 4: Analysis
+
+#### Time Complexity of Operations
+1. **Add**: O(1) if there is space available, otherwise O(n) if resizing is required (not shown in the simple implementation above).
+2. **Search**: O(n) in the worst case (linear search).
+3. **Traverse**: O(n), as each element is visited once.
+4. **Delete**: O(n) in the worst case, as elements may need to be shifted to fill the gap.
+
+#### Limitations of Arrays
+1. **Fixed Size**: Arrays have a fixed capacity, which can lead to wasted space if not fully used or overflow if more elements are added than the capacity allows.
+2. **Inefficient Deletions and Insertions**: Adding or removing elements from the middle of the array requires shifting elements, which can be inefficient.
+
+#### When to Use Arrays
+1. When you need fast access to elements by index.
+2. When the number of elements is known and relatively stable.
+3. When memory overhead needs to be minimized.

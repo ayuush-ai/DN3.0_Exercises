@@ -1,0 +1,33 @@
+### Step 1: Understand Asymptotic Notation
+
+#### Big O Notation
+Big O notation is used to describe the upper bound of the time complexity of an algorithm. It provides a high-level understanding of the algorithm's efficiency, especially in terms of how it scales with the input size. It helps in analyzing and comparing algorithms by focusing on the worst-case scenario.
+
+- **O(1)**: Constant time complexity, where the operation time is independent of the input size.
+- **O(n)**: Linear time complexity, where the operation time grows linearly with the input size.
+- **O(log n)**: Logarithmic time complexity, where the operation time grows logarithmically with the input size.
+- **O(n^2)**: Quadratic time complexity, where the operation time grows quadratically with the input size.
+
+#### Best, Average, and Worst-Case Scenarios
+- **Best Case**: The scenario where the algorithm performs the minimum number of operations.
+- **Average Case**: The scenario representing the average number of operations an algorithm performs across all possible inputs.
+- **Worst Case**: The scenario where the algorithm performs the maximum number of operations.
+
+### Step 4: Analysis
+
+#### Time Complexity Comparison
+
+1. **Linear Search**:
+   - **Time Complexity**: O(n)
+   - **Best Case**: O(1) (if the target product is the first element)
+   - **Average Case**: O(n/2) ~ O(n)
+   - **Worst Case**: O(n) (if the target product is the last element or not present)
+
+2. **Binary Search**:
+   - **Time Complexity**: O(log n)
+   - **Best Case**: O(1) (if the target product is at the middle)
+   - **Average Case**: O(log n)
+   - **Worst Case**: O(log n)
+
+#### Suitable Algorithm for the Platform
+Binary Search is more suitable for the platform due to its significantly better time complexity (O(log n)) compared to linear search (O(n)). This is especially beneficial for large datasets, which are common in e-commerce platforms. However, binary search requires the data to be sorted, which might add some overhead but can be managed efficiently with periodic sorting or maintaining a sorted data structure.

@@ -1,0 +1,24 @@
+### Step 1: Understand Recursive Algorithms
+
+#### Recursion
+- **Concept**: Recursion is a programming technique where a function calls itself to solve a smaller instance of the same problem. This technique can simplify problems with repetitive structures or those that can be broken down into similar sub-problems.
+- **Example**: Calculating the factorial of a number or solving the Fibonacci sequence.
+
+### Step 2: Setup
+
+- **Recursive Method**: Define the `calculateFutureValue` method to compute the future value using a recursive approach.
+
+### Step 3: Implementation
+
+- **Recursive Algorithm**: The `calculateFutureValue` method uses recursion to compute the future value based on past growth rates.
+- **Memoization**: The `calculateFutureValueMemoized` method optimizes the recursive approach by storing previously computed results in an array (memo). This prevents redundant calculations and improves efficiency.
+
+### Step 4: Analysis
+
+#### Time Complexity
+- **Recursive Algorithm**: The time complexity is O(n), where `n` is the number of years. Each recursive call represents one year, resulting in `n` calls in total.
+
+#### Optimization
+- **Memoization**: By storing the results of previously computed values, memoization reduces the number of recursive calls and avoids redundant computations. This optimization ensures that each value is computed only once, enhancing the efficiency of the algorithm.
+
+This theory highlights the principles of recursion, the role of memoization in optimizing recursive algorithms, and the impact of these techniques on time complexity.
