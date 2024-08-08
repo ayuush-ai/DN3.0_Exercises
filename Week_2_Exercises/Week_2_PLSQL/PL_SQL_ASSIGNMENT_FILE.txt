@@ -1,0 +1,470 @@
+Sure! Here are the PL/SQL blocks and procedures for the exercises you provided:
+
+### Exercise 1: Control Structures
+
+**Scenario 1: Apply Discount to Loan Interest Rates**
+```sql
+BEGIN
+    FOR customer_rec IN (SELECT CustomerID FROM Customers WHERE EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM DOB) > 60) LOOP
+        FOR loan_rec IN (SELECT LoanID, InterestRate FROM Loans WHERE CustomerID = customer_rec.CustomerID) LOOP
+            UPDATE Loans
+            SET InterestRate = InterestRate - 1
+            WHERE LoanID = loan_rec.LoanID;
+        END LOOP;
+    END LOOP;
+END;
+/
+```
+
+**Scenario 2: Promote to VIP Status**
+```sql
+BEGIN
+    FOR customer_rec IN (SELECT CustomerID, Balance FROM Customers) LOOP
+        IF customer_rec.Balance > 10000 THEN
+            UPDATE Customers
+            SET IsVIP = 'TRUE'
+            WHERE CustomerID = customer_rec.CustomerID;
+        END IF;
+    END LOOP;
+END;
+/
+```
+
+**Scenario 3: Send Reminders for Loans Due**
+```sql
+BEGIN
+    FOR loan_rec IN (SELECT CustomerID, LoanID, EndDate FROM Loans WHERE EndDate BETWEEN SYSDATE AND SYSDATE + 30) LOOP
+        DBMS_OUTPUT.PUT_LINE('Reminder: Loan ' || loan_rec.LoanID || ' for Customer ' || loan_rec.CustomerID || ' is due on ' || loan_rec.EndDate);
+    END LOOP;
+END;
+/
+```
+
+### Exercise 2: Error Handling
+
+**Scenario 1: Fund Transfer with Error Handling**
+```sql
+CREATE OR REPLACE PROCEDURE SafeTransferFunds (
+    p_from_account IN NUMBER,
+    p_to_account IN NUMBER,
+    p_amount IN NUMBER
+) AS
+BEGIN
+    -- Begin transaction
+    SAVEPOINT transfer;
+
+    -- Transfer funds
+    UPDATE Accounts
+    SET Balance = Balance - p_amount
+    WHERE AccountID = p_from_account;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Source account not found or insufficient funds');
+    END IF;
+
+    UPDATE Accounts
+    SET Balance = Balance + p_amount
+    WHERE AccountID = p_to_account;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'Destination account not found');
+    END IF;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK TO transfer;
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/
+```
+
+**Scenario 2: Update Salary with Error Handling**
+```sql
+CREATE OR REPLACE PROCEDURE UpdateSalary (
+    p_employee_id IN NUMBER,
+    p_percentage IN NUMBER
+) AS
+BEGIN
+    UPDATE Employees
+    SET Salary = Salary + (Salary * p_percentage / 100)
+    WHERE EmployeeID = p_employee_id;
+
+    IF SQL%ROWCOUNT = 0 THEN
+        RAISE_APPLICATION_ERROR(-20003, 'Employee ID does not exist');
+    END IF;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/
+```
+
+**Scenario 3: Add New Customer with Error Handling**
+```sql
+CREATE OR REPLACE PROCEDURE AddNewCustomer (
+    p_customer_id IN NUMBER,
+    p_name IN VARCHAR2,
+    p_dob IN DATE,
+    p_balance IN NUMBER
+) AS
+BEGIN
+    INSERT INTO Customers (CustomerID, Name, DOB, Balance, LastModified)
+    VALUES (p_customer_id, p_name, p_dob, p_balance, SYSDATE);
+
+    COMMIT;
+EXCEPTION
+    WHEN DUP_VAL_ON_INDEX THEN
+        DBMS_OUTPUT.PUT_LINE('Error: Customer with ID ' || p_customer_id || ' already exists');
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+END;
+/
+```
+
+### Exercise 3: Stored Procedures
+
+**Scenario 1: Process Monthly Interest**
+```sql
+CREATE OR REPLACE PROCEDURE ProcessMonthlyInterest AS
+BEGIN
+    FOR account_rec IN (SELECT AccountID, Balance FROM Accounts) LOOP
+        UPDATE Accounts
+        SET Balance = Balance + (Balance * 0.01)
+        WHERE AccountID = account_rec.AccountID;
+    END LOOP;
+    COMMIT;
+END;
+/
+```
+
+**Scenario 2: Update Employee Bonus**
+```sql
+CREATE OR REPLACE PROCEDURE UpdateEmployeeBonus (
+    p_department IN VARCHAR2,
+    p_bonus_percentage IN NUMBER
+) AS
+BEGIN
+    UPDATE Employees
+    SET Salary = Salary + (Salary * p_bonus_percentage / 100)
+    WHERE Department = p_department;
+
+    COMMIT;
+END;
+/
+```
+
+**Scenario 3: Transfer Funds Between Accounts**
+```sql
+CREATE OR REPLACE PROCEDURE TransferFunds (
+    p_from_account IN NUMBER,
+    p_to_account IN NUMBER,
+    p_amount IN NUMBER
+) AS
+BEGIN
+    -- Check sufficient balance
+    DECLARE
+        v_balance NUMBER;
+    BEGIN
+        SELECT Balance INTO v_balance
+        FROM Accounts
+        WHERE AccountID = p_from_account;
+
+        IF v_balance < p_amount THEN
+            RAISE_APPLICATION_ERROR(-20004, 'Insufficient funds');
+        END IF;
+    END;
+
+    -- Perform transfer
+    UPDATE Accounts
+    SET Balance = Balance - p_amount
+    WHERE AccountID = p_from_account;
+
+    UPDATE Accounts
+    SET Balance = Balance + p_amount
+    WHERE AccountID = p_to_account;
+
+    COMMIT;
+END;
+/
+```
+
+### Exercise 4: Functions
+
+**Scenario 1: Calculate Age**
+```sql
+CREATE OR REPLACE FUNCTION CalculateAge (
+    p_dob IN DATE
+) RETURN NUMBER AS
+BEGIN
+    RETURN FLOOR(MONTHS_BETWEEN(SYSDATE, p_dob) / 12);
+END;
+/
+```
+
+**Scenario 2: Calculate Monthly Installment**
+```sql
+CREATE OR REPLACE FUNCTION CalculateMonthlyInstallment (
+    p_loan_amount IN NUMBER,
+    p_interest_rate IN NUMBER,
+    p_loan_duration_years IN NUMBER
+) RETURN NUMBER AS
+    v_monthly_rate NUMBER;
+    v_monthly_installment NUMBER;
+BEGIN
+    v_monthly_rate := p_interest_rate / 12 / 100;
+    v_monthly_installment := (p_loan_amount * v_monthly_rate) / (1 - POWER(1 + v_monthly_rate, -p_loan_duration_years * 12));
+    RETURN v_monthly_installment;
+END;
+/
+```
+
+**Scenario 3: Check Sufficient Balance**
+```sql
+CREATE OR REPLACE FUNCTION HasSufficientBalance (
+    p_account_id IN NUMBER,
+    p_amount IN NUMBER
+) RETURN BOOLEAN AS
+    v_balance NUMBER;
+BEGIN
+    SELECT Balance INTO v_balance
+    FROM Accounts
+    WHERE AccountID = p_account_id;
+
+    RETURN v_balance >= p_amount;
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        RETURN FALSE;
+END;
+/
+```
+
+### Exercise 5: Triggers
+
+**Scenario 1: Update Last Modified Date**
+```sql
+CREATE OR REPLACE TRIGGER UpdateCustomerLastModified
+BEFORE UPDATE ON Customers
+FOR EACH ROW
+BEGIN
+    :NEW.LastModified := SYSDATE;
+END;
+/
+```
+
+**Scenario 2: Maintain Audit Log**
+```sql
+CREATE OR REPLACE TRIGGER LogTransaction
+AFTER INSERT ON Transactions
+FOR EACH ROW
+BEGIN
+    INSERT INTO AuditLog (TransactionID, ActionDate, ActionType, Details)
+    VALUES (:NEW.TransactionID, SYSDATE, 'INSERT', 'Transaction of type ' || :NEW.TransactionType);
+END;
+/
+```
+
+**Scenario 3: Enforce Transaction Rules**
+```sql
+CREATE OR REPLACE TRIGGER CheckTransactionRules
+BEFORE INSERT ON Transactions
+FOR EACH ROW
+BEGIN
+    IF :NEW.TransactionType = 'Withdrawal' THEN
+        DECLARE
+            v_balance NUMBER;
+        BEGIN
+            SELECT Balance INTO v_balance
+            FROM Accounts
+            WHERE AccountID = :NEW.AccountID;
+
+            IF v_balance < :NEW.Amount THEN
+                RAISE_APPLICATION_ERROR(-20005, 'Insufficient balance for withdrawal');
+            END IF;
+        END;
+    ELSIF :NEW.TransactionType = 'Deposit' THEN
+        IF :NEW.Amount <= 0 THEN
+            RAISE_APPLICATION_ERROR(-20006, 'Deposit amount must be positive');
+        END IF;
+    END IF;
+END;
+/
+```
+
+### Exercise 6: Cursors
+
+**Scenario 1: Generate Monthly Statements**
+```sql
+DECLARE
+    CURSOR monthly_cursor IS
+        SELECT AccountID, TransactionDate, Amount, TransactionType
+        FROM Transactions
+        WHERE EXTRACT(MONTH FROM TransactionDate) = EXTRACT(MONTH FROM SYSDATE)
+          AND EXTRACT(YEAR FROM TransactionDate) = EXTRACT(YEAR FROM SYSDATE);
+BEGIN
+    FOR rec IN monthly_cursor LOOP
+        DBMS_OUTPUT.PUT_LINE('Statement for Account ' || rec.AccountID || ': ' || rec.TransactionType || ' of amount ' || rec.Amount || ' on ' || rec.TransactionDate);
+    END LOOP;
+END;
+/
+```
+
+**Scenario 2: Apply Annual Fee**
+```sql
+DECLARE
+    CURSOR accounts_cursor IS
+        SELECT AccountID, Balance FROM Accounts;
+BEGIN
+    FOR rec IN accounts_cursor LOOP
+        UPDATE Accounts
+        SET Balance = Balance - 50 -- Assuming annual fee is $50
+        WHERE AccountID = rec.AccountID;
+    END LOOP;
+    COMMIT;
+END;
+/
+```
+
+**Scenario 3: Update Loan Interest Rates**
+```sql
+DECLARE
+    CURSOR loans_cursor IS
+        SELECT LoanID, InterestRate FROM Loans;
+
+
+BEGIN
+    FOR rec IN loans_cursor LOOP
+        UPDATE Loans
+        SET InterestRate = InterestRate + 0.5 -- Assuming new policy increases interest by 0.5%
+        WHERE LoanID = rec.LoanID;
+    END LOOP;
+    COMMIT;
+END;
+/
+```
+
+### Exercise 7: Packages
+
+**Scenario 1: Customer Management Package**
+```sql
+CREATE OR REPLACE PACKAGE CustomerManagement AS
+    PROCEDURE AddNewCustomer(p_customer_id IN NUMBER, p_name IN VARCHAR2, p_dob IN DATE, p_balance IN NUMBER);
+    PROCEDURE UpdateCustomerDetails(p_customer_id IN NUMBER, p_name IN VARCHAR2, p_dob IN DATE);
+    FUNCTION GetCustomerBalance(p_customer_id IN NUMBER) RETURN NUMBER;
+END CustomerManagement;
+/
+
+CREATE OR REPLACE PACKAGE BODY CustomerManagement AS
+    PROCEDURE AddNewCustomer(p_customer_id IN NUMBER, p_name IN VARCHAR2, p_dob IN DATE, p_balance IN NUMBER) IS
+    BEGIN
+        INSERT INTO Customers (CustomerID, Name, DOB, Balance, LastModified)
+        VALUES (p_customer_id, p_name, p_dob, p_balance, SYSDATE);
+        COMMIT;
+    END;
+
+    PROCEDURE UpdateCustomerDetails(p_customer_id IN NUMBER, p_name IN VARCHAR2, p_dob IN DATE) IS
+    BEGIN
+        UPDATE Customers
+        SET Name = p_name, DOB = p_dob, LastModified = SYSDATE
+        WHERE CustomerID = p_customer_id;
+        COMMIT;
+    END;
+
+    FUNCTION GetCustomerBalance(p_customer_id IN NUMBER) RETURN NUMBER IS
+        v_balance NUMBER;
+    BEGIN
+        SELECT Balance INTO v_balance
+        FROM Customers
+        WHERE CustomerID = p_customer_id;
+        RETURN v_balance;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RETURN NULL;
+    END;
+END CustomerManagement;
+/
+
+```
+
+**Scenario 2: Employee Management Package**
+```sql
+CREATE OR REPLACE PACKAGE EmployeeManagement AS
+    PROCEDURE HireNewEmployee(p_employee_id IN NUMBER, p_name IN VARCHAR2, p_position IN VARCHAR2, p_salary IN NUMBER, p_department IN VARCHAR2);
+    PROCEDURE UpdateEmployeeDetails(p_employee_id IN NUMBER, p_name IN VARCHAR2, p_position IN VARCHAR2, p_salary IN NUMBER);
+    FUNCTION CalculateAnnualSalary(p_employee_id IN NUMBER) RETURN NUMBER;
+END EmployeeManagement;
+/
+
+CREATE OR REPLACE PACKAGE BODY EmployeeManagement AS
+    PROCEDURE HireNewEmployee(p_employee_id IN NUMBER, p_name IN VARCHAR2, p_position IN VARCHAR2, p_salary IN NUMBER, p_department IN VARCHAR2) IS
+    BEGIN
+        INSERT INTO Employees (EmployeeID, Name, Position, Salary, Department, HireDate)
+        VALUES (p_employee_id, p_name, p_position, p_salary, p_department, SYSDATE);
+        COMMIT;
+    END;
+
+    PROCEDURE UpdateEmployeeDetails(p_employee_id IN NUMBER, p_name IN VARCHAR2, p_position IN VARCHAR2, p_salary IN NUMBER) IS
+    BEGIN
+        UPDATE Employees
+        SET Name = p_name, Position = p_position, Salary = p_salary
+        WHERE EmployeeID = p_employee_id;
+        COMMIT;
+    END;
+
+    FUNCTION CalculateAnnualSalary(p_employee_id IN NUMBER) RETURN NUMBER IS
+        v_salary NUMBER;
+    BEGIN
+        SELECT Salary INTO v_salary
+        FROM Employees
+        WHERE EmployeeID = p_employee_id;
+        RETURN v_salary * 12;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RETURN NULL;
+    END;
+END EmployeeManagement;
+/
+
+```
+
+**Scenario 3: Account Operations Package**
+```sql
+CREATE OR REPLACE PACKAGE AccountOperations AS
+    PROCEDURE OpenNewAccount(p_account_id IN NUMBER, p_customer_id IN NUMBER, p_account_type IN VARCHAR2, p_balance IN NUMBER);
+    PROCEDURE CloseAccount(p_account_id IN NUMBER);
+    FUNCTION GetTotalBalance(p_customer_id IN NUMBER) RETURN NUMBER;
+END AccountOperations;
+/
+
+CREATE OR REPLACE PACKAGE BODY AccountOperations AS
+    PROCEDURE OpenNewAccount(p_account_id IN NUMBER, p_customer_id IN NUMBER, p_account_type IN VARCHAR2, p_balance IN NUMBER) IS
+    BEGIN
+        INSERT INTO Accounts (AccountID, CustomerID, AccountType, Balance, LastModified)
+        VALUES (p_account_id, p_customer_id, p_account_type, p_balance, SYSDATE);
+        COMMIT;
+    END;
+
+    PROCEDURE CloseAccount(p_account_id IN NUMBER) IS
+    BEGIN
+        DELETE FROM Accounts
+        WHERE AccountID = p_account_id;
+        COMMIT;
+    END;
+
+    FUNCTION GetTotalBalance(p_customer_id IN NUMBER) RETURN NUMBER IS
+        v_total_balance NUMBER;
+    BEGIN
+        SELECT SUM(Balance) INTO v_total_balance
+        FROM Accounts
+        WHERE CustomerID = p_customer_id;
+        RETURN v_total_balance;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RETURN 0;
+    END;
+END AccountOperations;
+/
+```
+
