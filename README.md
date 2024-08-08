@@ -6,6 +6,6 @@ Cognizant's Digital Nurture 3.0 Program
 • Hands-On Exercises
 •PLSQL
 •SPRING CORE AND MAVEN
-#SUGGESTED IDE TO RUN PLSQL AND SPRING
+# SUGGESTED IDE TO RUN PLSQL AND SPRING
 •Eclipse
 
